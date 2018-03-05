@@ -26,11 +26,20 @@ defmodule Velvet.Tokens do
 
   """
 
-  @bracket_left_token {:"[", {0, 0, 0}}
-  @bracket_right_token {:"]", {0, 0, 0}}
+  @round_left :"("
+  @square_left :"["
+  @curly_left :"{"
+  @curly_right :"}"
+  @square_right :"]"
+  @round_right :")"
+
+
+  @left_square_token {@square_left, {0, 0, 0}}
+  @right_square_token {@square_right, {0, 0, 0}}
   @comma_token {:",", {0, 0, 0}}
   @list_token {:identifier, {0, 0, nil}, :list}
   @tuple_token {:identifier, {0, 0, nil}, :tuple}
+  @white_space [:",", :";", :eol]
 
   @elixir_ops [:"not in"] ++ ~W"
   @ . + - ! ^ not ~~ * / ++ -- .. <> in
@@ -39,7 +48,6 @@ defmodule Velvet.Tokens do
   & && &&& and or | || ||| :: <- \\
   "a
 
-  @white_space [:",", :";", :eol]
 
   def string_to_sexp(string, opts) do
     with {:ok, tokens} <- string_to_tokens(string, opts) do
@@ -78,41 +86,41 @@ defmodule Velvet.Tokens do
 
   defp tokens_to_sexp(tokens, opts) do
     tokens = collect(:sexp, tokens, [])
-    tokens = Enum.reverse([@bracket_right_token | tokens])
+    tokens = Enum.reverse([@right_square_token | tokens])
     tokens = case tokens do
                [@comma_token | tokens] -> tokens
                tokens -> tokens
              end
-    tokens = [@bracket_left_token] ++ tokens
+    tokens = [@left_square_token] ++ tokens
     |> IO.inspect
     tokens_to_quoted(tokens, opts)
   end
 
-  defguardp is_opening(atom) when atom == :"[" or atom == :"{" or atom == :"("
-  defguardp is_closing(atom) when atom == :"]" or atom == :"}" or atom == :")"
+  defguardp is_left(atom) when atom == @round_left or atom == @square_left or atom == @curly_left
+  defguardp is_right(atom) when atom == @round_right or atom == @square_right or atom == @curly_right
 
-  defp collect(:sexp = mode, tokens, [first, @comma_token, @bracket_left_token | acc]) do
-    collect(mode, tokens, [first, @bracket_left_token | acc])
+  defp collect(:sexp = mode, tokens, [first, @comma_token, @left_square_token | acc]) do
+    collect(mode, tokens, [first, @left_square_token | acc])
   end
 
   defp collect(:sexp = mode, tokens, [kv, @comma_token, ki = {:kw_identifier, _, _} | acc]) do
     collect(mode, tokens, [kv, ki | acc])
   end
 
-  defp collect(:sexp = mode, [{:"(", _} | tokens], acc) do
-    collect(mode, tokens, [@bracket_left_token | acc])
+  defp collect(:sexp = mode, [{@round_left, _} | tokens], acc) do
+    collect(mode, tokens, [@left_square_token | acc])
   end
 
-  defp collect(:sexp = mode, [{:"[", _} | tokens], acc) do
-    collect(mode, tokens, [@list_token, @bracket_left_token | acc])
+  defp collect(:sexp = mode, [{@square_left, _} | tokens], acc) do
+    collect(mode, tokens, [@list_token, @left_square_token | acc])
   end
 
-  defp collect(:sexp = mode, [{:"{", _} | tokens], acc) do
-    collect(mode, tokens, [@tuple_token, @bracket_left_token | acc])
+  defp collect(:sexp = mode, [{@curly_left, _} | tokens], acc) do
+    collect(mode, tokens, [@tuple_token, @left_square_token | acc])
   end
 
-  defp collect(:sexp = mode, [{close, _} | tokens], acc) when is_closing(close) do
-    collect(mode, tokens, [@bracket_right_token | acc])
+  defp collect(:sexp = mode, [{close, _} | tokens], acc) when is_right(close) do
+    collect(mode, tokens, [@right_square_token | acc])
   end
 
   @white_space |> Enum.each(fn ws ->
