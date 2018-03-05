@@ -53,7 +53,7 @@ defmodule VelvetTest do
     end
 
     test "a sexp with keywords creates a list for it" do
-      assert {:ok, nil} = ~V/ (1 2 foo: :bar) /sexp
+      assert {:ok, [[1, 2, [{:list, _, _}, {:foo, :bar}]]]} = ~V/ (1 2 foo: :bar) /sexp
     end
 
   end
