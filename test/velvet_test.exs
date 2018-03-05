@@ -24,8 +24,8 @@ defmodule VelvetTest do
       assert {:ok, [hello: :world]} = ~V/ hello: :world /sexp
     end
 
-    test "should parse a binary operator as an identifier" do
-      assert {:ok, [{:+, _, _}]} = ~V/ + /sexp
+    test "should parse a binary operator as an identifier at head of sexp" do
+      assert {:ok, [[{:+, _, _}, 1, 2]]} = ~V/ (+ 1 2) /sexp
     end
 
     test "should parse a dot as just another identifier at head of sexp" do

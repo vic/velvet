@@ -99,8 +99,8 @@ defmodule Velvet.Tokens do
     tokens_to_quoted(tokens, opts)
   end
 
-  defp collect({:sexp, _} = ctx, tokens, [x, @comma_token, dot = {:., _} | acc]) do
-    collect(ctx, tokens, [x, dot | acc])
+  defp collect({:sexp, _} = ctx, tokens, [x, @comma_token, op = {:., _} | acc]) do
+    collect(ctx, tokens, [x, op | acc])
   end
 
   defp collect({:sexp, _} = ctx, tokens, [first, @comma_token, @left_square_token | acc]) do
@@ -163,9 +163,13 @@ defmodule Velvet.Tokens do
 
   @elixir_ops
   |> Enum.each(fn op ->
-    defp collect({:sexp, _} = ctx, [{_, m, unquote(op) = id} | tokens], acc) do
-      token = {:identifier, m, id}
-      collect(ctx, tokens, [token, @comma_token | acc])
+    defp collect({:sexp, [@round_parens | _]} = ctx, [{_, m, unquote(op)} | tokens], [@left_square_token | _] = acc) do
+      token = {:identifier, m, unquote(op)}
+      collect(ctx, tokens, [token | acc])
+    end
+
+    defp collect({:sexp, _} = ctx, [token = {_, _, unquote(op)} | tokens], acc) do
+      collect(ctx, tokens, [token | acc])
     end
   end)
 
