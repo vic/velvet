@@ -53,7 +53,7 @@ defmodule VelvetTest do
     end
 
     test "creates a nested list for kw at end of sexp" do
-      assert {:ok, [[1, 2, [{:list, _, _}, {:foo, :bar}]]]} = ~V/ (1 2 foo: :bar) /sexp
+      assert {:ok, [[1, 2, [{:list, _, _}, {:foo, 3}, {:baz, 4}]]]} = ~V/ (1 2 foo: 3 baz: 4) /sexp
     end
   end
 end
