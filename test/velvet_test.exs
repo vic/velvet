@@ -31,6 +31,14 @@ defmodule VelvetTest do
     test "is identifier of dot operator ." do
       assert {:ok, [{:., _, _}]} = ~V/ . /sexp
     end
+
+    test "is sexp of list operator for empty list program" do
+      assert {:ok, [  [{:list, _, nil}]  ]} = ~V/ [ ] /sexp
+    end
+
+    test "brackets create list even without commas in it" do
+      assert {:ok, [  [{:list, _, _}, 1, 2]  ]} = ~V/ [ 1 2 ] /sexp
+    end
   end
 
 

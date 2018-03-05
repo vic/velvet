@@ -29,6 +29,7 @@ defmodule Velvet.Tokens do
   @bracket_left_token {:"[", {0, 0, 0}}
   @bracket_right_token {:"]", {0, 0, 0}}
   @comma_token {:",", {0, 0, 0}}
+  @list_token {:identifier, {0, 0, nil}, :list}
 
   @elixir_ops [:"not in"] ++ ~W"
   @ . + - ! ^ not ~~ * / ++ -- .. <> in
@@ -36,6 +37,8 @@ defmodule Velvet.Tokens do
   < > <= >= => == != =~ === !== =
   & && &&& and or | || ||| :: <- \\
   "a
+
+  @white_space [:",", :";", :eol]
 
   def string_to_sexp(string, opts) do
     with {:ok, tokens} <- string_to_tokens(string, opts) do
@@ -53,12 +56,12 @@ defmodule Velvet.Tokens do
     :elixir.tokens_to_quoted(tokens, file, opts)
   end
 
-  defp file_and_line(nil) do
-    [file: "nofile", line: 1]
-  end
-
   defp file_and_line(%{file: file, line: line}) do
     [file: file, line: line]
+  end
+
+  defp file_and_line([env: env]) do
+    file_and_line(env)
   end
 
   defp file_and_line(opts) when is_list(opts) do
@@ -66,6 +69,10 @@ defmodule Velvet.Tokens do
     file = Keyword.get(opts, :file, file)
     line = Keyword.get(opts, :line, line)
     [file: file, line: line]
+  end
+
+  defp file_and_line(_) do
+    [file: "nofile", line: 1]
   end
 
   defp tokens_to_sexp(tokens, opts) do
@@ -76,17 +83,27 @@ defmodule Velvet.Tokens do
                tokens -> tokens
              end
     tokens = [@bracket_left_token] ++ tokens
+    |> IO.inspect
     tokens_to_quoted(tokens, opts)
   end
 
-  defp collect(:sexp = mode, [token = {:kw_identifier, _, _}, v_token | tokens], acc) do
-    collect(mode, tokens, [v_token, token | acc])
+  defp collect(:sexp = mode, tokens, [kv, @comma_token, ki = {:kw_identifier, _, _} | acc]) do
+    collect(mode, tokens, [kv, ki | acc])
   end
 
-  defp collect(:sexp = mode, [{ignored, _, _} | tokens], acc)
-  when ignored == :eol or ignored == :"," or ignored == :";" do
-    collect(mode, tokens, acc)
+  defp collect(:sexp = mode, [open = {:"[", _} | tokens], acc) do
+    collect(mode, tokens, [@list_token, open | acc])
   end
+
+  defp collect(:sexp = mode, tokens, [close = {:"]", _}, @comma_token | acc]) do
+    collect(mode, tokens, [close | acc])
+  end
+
+  @white_space |> Enum.each(fn ws ->
+    defp collect(:sexp = mode, [{unquote(ws), _, _} | tokens], acc) do
+      collect(mode, tokens, acc)
+    end
+  end)
 
   defp collect(:sexp = mode, [{:., m} | tokens], acc) do
     token = {:identifier, m, :.}
@@ -102,10 +119,6 @@ defmodule Velvet.Tokens do
 
   defp collect(:sexp = mode, [token | tokens], acc) do
     collect(mode, tokens, [token, @comma_token | acc])
-  end
-
-  defp collect(mode, [token | tokens], acc) do
-    collect(mode, tokens, [token | acc])
   end
 
   defp collect(_mode, [], acc), do: acc
