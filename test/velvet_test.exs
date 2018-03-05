@@ -3,56 +3,56 @@ defmodule VelvetTest do
   import Velvet.Sigils
   doctest Velvet
 
-  describe "sexp" do
-    test "is empty for empty program" do
+  describe "parsing a sexp" do
+    test "should be empty for empty program" do
       assert {:ok, []} = ~V//sexp
     end
 
-    test "is list of single atom for program just containing it" do
+    test "should be the atom for program only contains it" do
       assert {:ok, [:hello]} = ~V/ :hello /sexp
     end
 
-    test "is list of single identifier for program just containing it" do
+    test "should be the quoted identifier for program only containing it" do
       assert {:ok, [{:world, _, _}]} = ~V/ world /sexp
     end
 
-    test "is list of identifiers for program without comma between them" do
+    test "should be a list of quoted identifiers for space separated program" do
       assert {:ok, [{:hello, _, _}, {:world, _, _}]} = ~V/ hello world /sexp
     end
 
-    test "is keyword for program just containing it" do
+    test "should be the tuple-2 of a keyword list" do
       assert {:ok, [hello: :world]} = ~V/ hello: :world /sexp
     end
 
-    test "is identifier of single bin operator +" do
+    test "should parse a binary operator as an identifier" do
       assert {:ok, [{:+, _, _}]} = ~V/ + /sexp
     end
 
-    test "is identifier of dot operator ." do
+    test "should parse a dot as just another identifier" do
       assert {:ok, [{:., _, _}]} = ~V/ . /sexp
     end
 
-    test "bracketed empty list" do
+    test "should parse the empty list to a sexp calling list with no args" do
       assert {:ok, [[{:list, _, nil}]]} = ~V/ [ ] /sexp
     end
 
-    test "brackets create list even without commas in it" do
+    test "should parse a list with arguments" do
       assert {:ok, [[{:list, _, _}, 1, 2]]} = ~V/ [ 1 2 ] /sexp
     end
 
-    test "parses empty tuple" do
+    test "should parse an empty tuple as a sexp calling tuple with no args" do
       assert {:ok, [[{:tuple, _, nil}]]} = ~V/ { } /sexp
     end
 
-    test "parses empty parens as a nested sexp" do
+    test "should parse empty parens as an empty sexp" do
       assert {:ok, [[]]} = ~V/ () /sexp
     end
 
-    test "parses sexp with two items" do
+    test "should parse items without comma inside a paren expression" do
       assert {:ok, [[1, 2]]} = ~V/ (1 2) /sexp
     end
 
-    test "creates a nested list for kw at end of sexp" do
+    test "should create an inner list sexp for keywords at the end of parent sexp" do
       assert {:ok, [[1, 2, [{:list, _, _}, {:foo, 3}, {:baz, 4}]]]} = ~V/ (1 2 foo: 3 baz: 4) /sexp
     end
   end

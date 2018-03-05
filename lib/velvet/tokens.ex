@@ -165,5 +165,5 @@ defmodule Velvet.Tokens do
     collect(ctx, tokens, [token, @comma_token | acc])
   end
 
-  defp collect(_ctx, [], acc), do: acc
+  defp collect({:sexp, []}, [], acc), do: acc
 end
