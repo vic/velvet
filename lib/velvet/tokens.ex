@@ -99,6 +99,10 @@ defmodule Velvet.Tokens do
     tokens_to_quoted(tokens, opts)
   end
 
+  defp collect({:sexp, _} = ctx, tokens, [x, @comma_token, dot = {:., _} | acc]) do
+    collect(ctx, tokens, [x, dot | acc])
+  end
+
   defp collect({:sexp, _} = ctx, tokens, [first, @comma_token, @left_square_token | acc]) do
     collect(ctx, tokens, [first, @left_square_token | acc])
   end
@@ -147,6 +151,11 @@ defmodule Velvet.Tokens do
       collect(ctx, tokens, acc)
     end
   end)
+
+  defp collect({:sexp, _} = ctx, [token = {:., _} | tokens], [{prev, _, _} | _] = acc)
+  when prev == :alias or prev == :identifier or prev == :atom  do
+    collect(ctx, tokens, [token | acc])
+  end
 
   defp collect({:sexp, _} = ctx, [{:., m} | tokens], acc) do
     token = {:identifier, m, :.}

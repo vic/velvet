@@ -28,8 +28,20 @@ defmodule VelvetTest do
       assert {:ok, [{:+, _, _}]} = ~V/ + /sexp
     end
 
-    test "should parse a dot as just another identifier" do
-      assert {:ok, [{:., _, _}]} = ~V/ . /sexp
+    test "should parse a dot as just another identifier at head of sexp" do
+      assert {:ok, [[{:., _, _}, {:a, _, _}]]} = ~V/ (. a) /sexp
+    end
+
+    test "should parse a dot as call for prev identifier" do
+      assert {:ok, [[ {{:., _, [{:a, _, _}, :b]}, _, []}  ]]} = ~V/ (a . b) /sexp
+    end
+
+    test "should parse a dot as call for prev atom" do
+      assert {:ok, [[ {{:., _, [:hello, :b]}, _, []}  ]]} = ~V/ (:hello . b) /sexp
+    end
+
+    test "should parse a dot as call for prev alias" do
+      assert {:ok, [[ {{:., _, [{:__aliases__, _, [:Hello]}, :b]}, _, []}  ]]} = ~V/ (Hello . b) /sexp
     end
 
     test "should parse the empty list to a sexp calling list with no args" do
