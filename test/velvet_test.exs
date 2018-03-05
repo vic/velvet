@@ -40,9 +40,14 @@ defmodule VelvetTest do
       assert {:ok, [  [{:list, _, _}, 1, 2]  ]} = ~V/ [ 1 2 ] /sexp
     end
 
-    test "tuple" do
+    test "parses empty tuple" do
       assert {:ok, [  [{:tuple, _, nil}]  ]} = ~V/ { } /sexp
     end
+
+    test "parses empty parens as a nested sexp" do
+      assert {:ok, [[]]} = ~V/ () /sexp
+    end
+
   end
 
 
