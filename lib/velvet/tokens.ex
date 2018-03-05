@@ -1,5 +1,4 @@
 defmodule Velvet.Tokens do
-
   @moduledoc """
   The velvet token compiler.
 
@@ -26,12 +25,12 @@ defmodule Velvet.Tokens do
 
   """
 
-  @round_left   :"("
-  @square_left  :"["
-  @curly_left   :"{"
-  @curly_right  :"}"
+  @round_left :"("
+  @square_left :"["
+  @curly_left :"{"
+  @curly_right :"}"
   @square_right :"]"
-  @round_right  :")"
+  @round_right :")"
 
   @round_parens {@round_left, @round_right}
 
@@ -48,7 +47,6 @@ defmodule Velvet.Tokens do
   < > <= >= => == != =~ === !== =
   & && &&& and or | || ||| :: <- \\
   "a
-
 
   def string_to_sexp(string, opts) do
     with {:ok, tokens} <- string_to_tokens(string, opts) do
@@ -70,7 +68,7 @@ defmodule Velvet.Tokens do
     [file: file, line: line]
   end
 
-  defp file_and_line([env: env]) do
+  defp file_and_line(env: env) do
     file_and_line(env)
   end
 
@@ -87,12 +85,17 @@ defmodule Velvet.Tokens do
   defp tokens_to_sexp(tokens, opts) do
     tokens = collect({:sexp, []}, tokens, [])
     tokens = Enum.reverse([@right_square_token | tokens])
-    tokens = case tokens do
-               [@comma_token | tokens] -> tokens
-               tokens -> tokens
-             end
-    tokens = [@left_square_token] ++ tokens
-    |> IO.inspect
+
+    tokens =
+      case tokens do
+        [@comma_token | tokens] -> tokens
+        tokens -> tokens
+      end
+
+    tokens =
+      ([@left_square_token] ++ tokens)
+      |> IO.inspect()
+
     tokens_to_quoted(tokens, opts)
   end
 
@@ -100,7 +103,11 @@ defmodule Velvet.Tokens do
     collect(ctx, tokens, [first, @left_square_token | acc])
   end
 
-  defp collect({:sexp, [@round_parens | c]}, tokens, [kv, @comma_token, ki = {:kw_identifier, _, _} | acc]) do
+  defp collect({:sexp, [@round_parens | c]}, tokens, [
+         kv,
+         @comma_token,
+         ki = {:kw_identifier, _, _} | acc
+       ]) do
     ctx = {:sexp, [:kw, @round_parens | c]}
     collect(ctx, tokens, [kv, ki, @comma_token, @list_token, @left_square_token | acc])
   end
@@ -124,17 +131,18 @@ defmodule Velvet.Tokens do
     collect(ctx, tokens, [@tuple_token, @left_square_token | acc])
   end
 
-  defp collect({:sexp, [:kw, {l,r} | c]} = ctx, [{close, _} | tokens], acc) when r == close do
+  defp collect({:sexp, [:kw, {l, r} | c]} = ctx, [{close, _} | tokens], acc) when r == close do
     ctx = {:sexp, c}
     collect(ctx, tokens, [@right_square_token, @right_square_token | acc])
   end
 
-  defp collect({:sexp, [{l,r} | c]} = ctx, [{close, _} | tokens], acc) when r == close do
+  defp collect({:sexp, [{l, r} | c]} = ctx, [{close, _} | tokens], acc) when r == close do
     ctx = {:sexp, c}
     collect(ctx, tokens, [@right_square_token | acc])
   end
 
-  @white_space |> Enum.each(fn ws ->
+  @white_space
+  |> Enum.each(fn ws ->
     defp collect({:sexp, _} = ctx, [{unquote(ws), _, _} | tokens], acc) do
       collect(ctx, tokens, acc)
     end
@@ -145,7 +153,8 @@ defmodule Velvet.Tokens do
     collect(ctx, tokens, [token, @comma_token | acc])
   end
 
-  @elixir_ops |> Enum.each(fn op ->
+  @elixir_ops
+  |> Enum.each(fn op ->
     defp collect({:sexp, _} = ctx, [{_, m, unquote(op) = id} | tokens], acc) do
       token = {:identifier, m, id}
       collect(ctx, tokens, [token, @comma_token | acc])
@@ -157,6 +166,4 @@ defmodule Velvet.Tokens do
   end
 
   defp collect(_ctx, [], acc), do: acc
-
-
 end

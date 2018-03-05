@@ -33,15 +33,15 @@ defmodule VelvetTest do
     end
 
     test "bracketed empty list" do
-      assert {:ok, [  [{:list, _, nil}]  ]} = ~V/ [ ] /sexp
+      assert {:ok, [[{:list, _, nil}]]} = ~V/ [ ] /sexp
     end
 
     test "brackets create list even without commas in it" do
-      assert {:ok, [  [{:list, _, _}, 1, 2]  ]} = ~V/ [ 1 2 ] /sexp
+      assert {:ok, [[{:list, _, _}, 1, 2]]} = ~V/ [ 1 2 ] /sexp
     end
 
     test "parses empty tuple" do
-      assert {:ok, [  [{:tuple, _, nil}]  ]} = ~V/ { } /sexp
+      assert {:ok, [[{:tuple, _, nil}]]} = ~V/ { } /sexp
     end
 
     test "parses empty parens as a nested sexp" do
@@ -52,11 +52,8 @@ defmodule VelvetTest do
       assert {:ok, [[1, 2]]} = ~V/ (1 2) /sexp
     end
 
-    test "a sexp with keywords creates a list for it" do
+    test "creates a nested list for kw at end of sexp" do
       assert {:ok, [[1, 2, [{:list, _, _}, {:foo, :bar}]]]} = ~V/ (1 2 foo: :bar) /sexp
     end
-
   end
-
-
 end

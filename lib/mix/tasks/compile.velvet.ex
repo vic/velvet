@@ -8,6 +8,7 @@ defmodule Mix.Tasks.Compile.Velvet do
   """
 
   use Mix.Task
+
   def run(_args) do
   end
 end
