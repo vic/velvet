@@ -120,27 +120,27 @@ defmodule Velvet.Tokens do
     collect(ctx, tokens, [kv, ki | acc])
   end
 
-  defp collect({:sexp, c} = ctx, [{@round_left, _} | tokens], acc) do
+  defp collect({:sexp, c}, [{@round_left, _} | tokens], acc) do
     ctx = {:sexp, [{@round_left, @round_right} | c]}
     collect(ctx, tokens, [@left_square_token | acc])
   end
 
-  defp collect({:sexp, c} = ctx, [{@square_left, _} | tokens], acc) do
+  defp collect({:sexp, c}, [{@square_left, _} | tokens], acc) do
     ctx = {:sexp, [{@square_left, @square_right} | c]}
     collect(ctx, tokens, [@list_token, @left_square_token | acc])
   end
 
-  defp collect({:sexp, c} = ctx, [{@curly_left, _} | tokens], acc) do
+  defp collect({:sexp, c}, [{@curly_left, _} | tokens], acc) do
     ctx = {:sexp, [{@curly_left, @curly_right} | c]}
     collect(ctx, tokens, [@tuple_token, @left_square_token | acc])
   end
 
-  defp collect({:sexp, [:kw, {l, r} | c]} = ctx, [{close, _} | tokens], acc) when r == close do
+  defp collect({:sexp, [:kw, {_l, r} | c]}, [{close, _} | tokens], acc) when r == close do
     ctx = {:sexp, c}
     collect(ctx, tokens, [@right_square_token, @right_square_token | acc])
   end
 
-  defp collect({:sexp, [{l, r} | c]} = ctx, [{close, _} | tokens], acc) when r == close do
+  defp collect({:sexp, [{_l, r} | c]}, [{close, _} | tokens], acc) when r == close do
     ctx = {:sexp, c}
     collect(ctx, tokens, [@right_square_token | acc])
   end
@@ -152,7 +152,7 @@ defmodule Velvet.Tokens do
     end
   end)
 
-  defp collect({:sexp, [@round_parens | _]} = ctx, [token = {:., m} | tokens], [@left_square_token | _] = acc) do
+  defp collect({:sexp, [@round_parens | _]} = ctx, [{:., m} | tokens], [@left_square_token | _] = acc) do
     token = {:identifier, m, :.}
     collect(ctx, tokens, [token | acc])
   end
