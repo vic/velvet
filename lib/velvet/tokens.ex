@@ -30,6 +30,7 @@ defmodule Velvet.Tokens do
   @bracket_right_token {:"]", {0, 0, 0}}
   @comma_token {:",", {0, 0, 0}}
   @list_token {:identifier, {0, 0, nil}, :list}
+  @tuple_token {:identifier, {0, 0, nil}, :tuple}
 
   @elixir_ops [:"not in"] ++ ~W"
   @ . + - ! ^ not ~~ * / ++ -- .. <> in
@@ -91,12 +92,21 @@ defmodule Velvet.Tokens do
     collect(mode, tokens, [kv, ki | acc])
   end
 
-  defp collect(:sexp = mode, [open = {:"[", _} | tokens], acc) do
-    collect(mode, tokens, [@list_token, open | acc])
+  defp collect(:sexp = mode, [{:"(", _} | tokens], acc) do
+    collect(mode, tokens, [@bracket_left_token | acc])
   end
 
-  defp collect(:sexp = mode, tokens, [close = {:"]", _}, @comma_token | acc]) do
-    collect(mode, tokens, [close | acc])
+  defp collect(:sexp = mode, [{:"[", _} | tokens], acc) do
+    collect(mode, tokens, [@list_token, @bracket_left_token | acc])
+  end
+
+  defp collect(:sexp = mode, [{:"{", _} | tokens], acc) do
+    collect(mode, tokens, [@tuple_token, @bracket_left_token | acc])
+  end
+
+  defp collect(:sexp = mode, [{close, _} | tokens], acc)
+  when close == :"]" or close == :"}" or close == :")" do
+    collect(mode, tokens, [@bracket_right_token | acc])
   end
 
   @white_space |> Enum.each(fn ws ->
