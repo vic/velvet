@@ -88,6 +88,13 @@ defmodule Velvet.Tokens do
     tokens_to_quoted(tokens, opts)
   end
 
+  defguardp is_opening(atom) when atom == :"[" or atom == :"{" or atom == :"("
+  defguardp is_closing(atom) when atom == :"]" or atom == :"}" or atom == :")"
+
+  defp collect(:sexp = mode, tokens, [first, @comma_token, @bracket_left_token | acc]) do
+    collect(mode, tokens, [first, @bracket_left_token | acc])
+  end
+
   defp collect(:sexp = mode, tokens, [kv, @comma_token, ki = {:kw_identifier, _, _} | acc]) do
     collect(mode, tokens, [kv, ki | acc])
   end
@@ -104,8 +111,7 @@ defmodule Velvet.Tokens do
     collect(mode, tokens, [@tuple_token, @bracket_left_token | acc])
   end
 
-  defp collect(:sexp = mode, [{close, _} | tokens], acc)
-  when close == :"]" or close == :"}" or close == :")" do
+  defp collect(:sexp = mode, [{close, _} | tokens], acc) when is_closing(close) do
     collect(mode, tokens, [@bracket_right_token | acc])
   end
 

@@ -48,6 +48,14 @@ defmodule VelvetTest do
       assert {:ok, [[]]} = ~V/ () /sexp
     end
 
+    test "parses sexp with two items" do
+      assert {:ok, [[1, 2]]} = ~V/ (1 2) /sexp
+    end
+
+    test "a sexp with keywords creates a list for it" do
+      assert {:ok, nil} = ~V/ (1 2 foo: :bar) /sexp
+    end
+
   end
 
 
